@@ -1,6 +1,7 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { createFileRoute, redirect, useNavigate } from '@tanstack/react-router'
 import { z } from 'zod'
+import { InstanceDrawer } from '@/components/InstanceDrawer'
 import { InstanceList } from '@/components/InstanceList'
 import { Button } from '@/components/ui/button'
 import { logout } from '@/functions'
@@ -20,6 +21,7 @@ export const Route = createFileRoute('/instances')({
 
 function InstancesPage() {
   const { persona } = Route.useRouteContext()
+  const { instance } = Route.useSearch()
   const navigate = useNavigate()
   const queryClient = useQueryClient()
   const signOut = useMutation({
@@ -48,6 +50,7 @@ function InstancesPage() {
       <main className="mx-auto max-w-5xl px-4 py-8">
         <InstanceList />
       </main>
+      <InstanceDrawer instanceId={instance} />
     </div>
   )
 }

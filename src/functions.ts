@@ -25,7 +25,7 @@ import {
   verifySession,
   type Session,
 } from '@/server/session'
-import { toSnapshot, type Action, type Instance, type Snapshot } from '@/server/snapshot'
+import { statusOf, toSnapshot, type Action, type Instance, type Snapshot } from '@/server/snapshot'
 
 // The only boundary between the browser and the server: every call to Railway
 // goes through one of these functions, and every one of them returns a Result.
@@ -167,7 +167,11 @@ export const getDeployments = createServerFn({ method: 'GET' })
       const { deployments } = await railway(DeploymentsQuery, {
         input: { projectId, environmentId, serviceId: instance.id },
       })
-      return deployments.edges.map(({ node }) => node)
+      return deployments.edges.map(({ node }) => ({
+        id: node.id,
+        status: statusOf(node.status, true),
+        createdAt: node.createdAt,
+      }))
     }),
   )
 
