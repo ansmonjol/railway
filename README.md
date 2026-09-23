@@ -25,7 +25,7 @@ railway run --service dashboard -- pnpm dev   # same, with the deployed service'
 
 Checks: `pnpm typecheck`, `pnpm lint`, `pnpm test`. Production build: `pnpm build && pnpm start`. On every pull request and push to `main`, [CI](.github/workflows/ci.yml) runs the checks plus `pnpm exec gql.tada check` and `pnpm format:check`, and [Build](.github/workflows/build.yml) runs `pnpm build`.
 
-Deploying: the `dashboard` service is declared in `.railway/railway.ts` and builds from `main` on every merge, once CI and Build pass on that commit. `railway config plan` / `railway config apply` change its settings; secrets are set once with `railway variable set --stdin`.
+Deploying: the `dashboard` service is the only resource of the Railway project `Dashboard`, declared in full in `.railway/railway.ts`, and builds from `main` on every merge, once CI and Build pass on that commit. The instances live in a second project, `Sandboxes`. `railway config plan` / `railway config apply` change the dashboard's settings; secrets are set once with `railway variable set --stdin`.
 
 ## Architecture
 
@@ -46,12 +46,12 @@ TanStack Query polls  ---- RPC --> auth, validation, rules, 2 s cache  -----> /g
 
 - **One boundary.** The browser never talks to Railway: every call goes through a TanStack Start server function holding the token. No GraphQL proxy, no token in the client. Server functions only answer same-origin requests (TanStack's CSRF middleware, on top of a `SameSite=Lax` cookie).
 - **Results, not exceptions.** Server functions return `{ ok: true, data } | { ok: false, message, traceId? }`. The client unwraps them into TanStack Query errors, and one place (`router.tsx`) turns failures into toasts or, for an expired session, a trip back to the login screen.
-- **Rules live on the server.** The slot cap (`SANDBOX_MAX_SERVICES` minus current rows), `SPINNED_BY` / `SPINNED_AT` taken from the session cookie rather than the request, the actions allowed per status, and the dashboard's own service (`RAILWAY_SERVICE_ID`), which is hidden and can never be targeted.
+- **Rules live on the server.** The slot cap (`SANDBOX_MAX_SERVICES` minus current rows), `SPINNED_BY` / `SPINNED_AT` taken from the session cookie rather than the request, the actions allowed per status, and the targets: a service ID from the browser only counts if a fresh snapshot of the sandbox lists it.
 - **Status mapping.** Queued, initializing, building, deploying, waiting and needs approval are _starting_; success is _running_; sleeping is _sleeping_; removing is _stopping_; removed, or no deployment on a service that has deployed before, is _stopped_; failed and crashed are _failed_; anything else is _unknown_. The map is typed against the schema's enum, so a new Railway status fails the build after a schema refresh.
 - **Stop removes the deployment.** `deploymentStop` leaves the status at SUCCESS, and `serviceInstanceRedeploy` does nothing once no deployment exists, hence `deploymentRemove` to stop and `serviceInstanceDeployV2` to start.
 - **Destroy is scoped to the environment.** A project token gets "Not Authorized" on a project-wide `serviceDelete`, so the call passes `environmentId`; Railway then removes the service once no environment holds it.
 - **Railway is slow to answer and slower to settle.** `serviceInstanceDeployV2` and `serviceDelete` sometimes take 15 to 20 s (the fetch timeout is 30 s), and a destroyed service stays listed for about ten seconds while Railway removes its domain, then its deployment, then the service. So the list polls every 3 s for 20 s after any write, a row stays Pending until the list reflects its call, and the server remembers what it is destroying so the row reads Destroying instead of Stopped with a Start button.
-- **One project.** The dashboard manages the project it runs in, and its infrastructure file is a named partial, so `railway config apply` never treats runtime instances as drift. The trade-off: reading `SPINNED_*` needs `config(decryptVariables: true)`, which also returns the dashboard's own secrets to the server. They never leave the snapshot derivation; a separate sandbox project would remove the question (the `SANDBOX_*` variables already allow it).
+- **Two projects.** The dashboard runs in `Dashboard` and the instances live in `Sandboxes`; the dashboard's token is a project token of `Sandboxes` only. Reading `SPINNED_*` needs `config(decryptVariables: true)`, which returns every variable in the sandbox: with the dashboard in its own project, that never includes the dashboard's secrets, and there is no dashboard service to hide from the list. `.railway/railway.ts` owns the whole `Dashboard` project, while the instances are runtime state that no file declares. The cost is the trial's second project slot and the sandbox's IDs written into that file.
 - **Rate limits.** Railway allows 1000 requests per hour per token. At 15 s the list costs about 240 per hour per open tab (tabs share the cache), logs cost 720 per hour but only while the Logs tab is open and visible. A 429 starts a cool-down that honors `Retry-After` instead of hammering the API.
 - **SPA, no SSR.** SPA mode prerenders the shell at build time, and `defaultSsr: false` keeps the Node server from rendering routes at runtime too.
 - **Typed GraphQL without codegen.** gql.tada types every document against a checked-in schema snapshot (`pnpm schema` refreshes it), and `gql.tada check` validates them.
@@ -62,7 +62,6 @@ TanStack Query polls  ---- RPC --> auth, validation, rules, 2 s cache  -----> /g
 
 What I would do next, roughly in order:
 
-- **Two projects**: the dashboard in its own project and the instances in a sandbox project. The sandbox token would then never decrypt the dashboard's secrets, and the dashboard would not need to hide itself. The code already reads the sandbox from `SANDBOX_*`; the move is a second project token and the trial's second project slot.
 - **Push instead of poll**: Railway's GraphQL subscriptions for deployment status and logs, relayed over SSE.
 - **Slot reservation**: two simultaneous spin-ups can both pass the cap check (Railway's own per-project limit still holds). A lock or a reservation row would close it.
 - **Clean up half-created instances** when the domain or the deploy fails after `serviceCreate`. Today they show up as _unknown_ with Start and Destroy.

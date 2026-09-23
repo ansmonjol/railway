@@ -8,9 +8,7 @@ const schema = z.object({
   SESSION_SECRET: z.string().min(32),
   SANDBOX_PROJECT_ID: z.string().min(1),
   SANDBOX_ENVIRONMENT_ID: z.string().min(1),
-  SANDBOX_MAX_SERVICES: z.coerce.number().int().min(1).default(3),
-  // Injected by Railway: the dashboard's own service, hidden when it shares the sandbox.
-  RAILWAY_SERVICE_ID: z.string().optional(),
+  SANDBOX_MAX_SERVICES: z.coerce.number().int().min(1).default(4),
 })
 
 export type Env = z.infer<typeof schema>

@@ -3,8 +3,6 @@ import { statusOf, toSnapshot, type RailwayEnvironment } from './snapshot'
 
 type Node = RailwayEnvironment['serviceInstances']['edges'][number]['node']
 
-const DASHBOARD_ID = 'svc-dashboard'
-
 // A complete service instance as the Snapshot query returns it.
 function node(overrides: Partial<Node> & Pick<Node, 'serviceId' | 'serviceName'>): Node {
   return {
@@ -63,25 +61,28 @@ describe('statusOf', () => {
 })
 
 describe('toSnapshot', () => {
-  const options = { excludedServiceIds: [DASHBOARD_ID], maxServices: 3 }
+  const options = { maxServices: 3 }
 
-  it('hides the excluded dashboard service and leaves it out of the slot count', () => {
+  it('lists every service in the sandbox, each taking a slot', () => {
     const snapshot = toSnapshot(
       environment([
-        node({ serviceId: DASHBOARD_ID, serviceName: 'dashboard' }),
         node({ serviceId: 'svc-a', serviceName: 'whoami-calm-otter' }),
+        node({ serviceId: 'svc-b', serviceName: 'created-by-hand' }),
       ]),
       options,
     )
-    expect(snapshot.instances.map((i) => i.id)).toEqual(['svc-a'])
-    expect(snapshot.slots).toEqual({ used: 1, max: 3, free: 2 })
+    expect(snapshot.instances.map((i) => i.id)).toEqual(['svc-a', 'svc-b'])
+    expect(snapshot.slots).toEqual({ used: 2, max: 3, free: 1 })
   })
 
   it('maps a running instance with who spun it up and when', () => {
     const snapshot = toSnapshot(
       environment([node({ serviceId: 'svc-a', serviceName: 'whoami-calm-otter' })], {
-        'svc-a': { SPINNED_BY: 'Otter', SPINNED_AT: '2026-09-23T10:00:05.000Z' },
-        [DASHBOARD_ID]: { SESSION_SECRET: 'must-not-leak' },
+        'svc-a': {
+          SPINNED_BY: 'Otter',
+          SPINNED_AT: '2026-09-23T10:00:05.000Z',
+          API_KEY: 'must-not-leak',
+        },
       }),
       options,
     )
