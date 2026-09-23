@@ -18,6 +18,6 @@ Done means what CI runs is green locally, shown with its output: `pnpm typecheck
 - Conventional Commits for commit subjects and PR titles (`feat(instances): ...`). No Co-Authored-By lines and no mention of AI assistance in commits or PRs.
 - Work on a feature branch and land it through a squash-merged PR.
 - The browser never calls Railway. Every Railway call runs in a server function in `src/functions.ts`, and each one returns `{ ok: true, data } | { ok: false, message, traceId? }` instead of throwing.
-- The rules live on the server: the slot cap, `SPINNED_BY` / `SPINNED_AT` taken from the session cookie, and acting only on services that a fresh snapshot of the sandbox lists.
+- The rules live on the server: the slot cap, `SPINNED_BY` / `SPINNED_AT` taken from the session cookie, acting only on services that a fresh snapshot of the sandbox lists, and refusing to run inside the sandbox itself.
 - Tests cover pure functions only and never touch the real API.
 - Secrets live only in the environment (see `.env.example`). Never create or delete Railway resources without asking first.
