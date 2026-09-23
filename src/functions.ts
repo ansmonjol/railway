@@ -208,12 +208,11 @@ function loadSnapshot({ fresh = false } = {}): Promise<Snapshot> {
   if (!fresh && snapshotCache && Date.now() - snapshotCache.at < SNAPSHOT_TTL_MS) {
     return snapshotCache.promise
   }
-  const { SANDBOX_ENVIRONMENT_ID, SANDBOX_MAX_SERVICES, RAILWAY_SERVICE_ID } = env()
+  const { SANDBOX_ENVIRONMENT_ID, SANDBOX_MAX_SERVICES } = env()
   for (const [id, until] of destroying) if (until < Date.now()) destroying.delete(id)
   const promise = railway(SnapshotQuery, { environmentId: SANDBOX_ENVIRONMENT_ID }).then(
     ({ environment }) =>
       toSnapshot(environment, {
-        excludedServiceIds: RAILWAY_SERVICE_ID ? [RAILWAY_SERVICE_ID] : [],
         destroyingServiceIds: [...destroying.keys()],
         maxServices: SANDBOX_MAX_SERVICES,
       }),
@@ -225,7 +224,7 @@ function loadSnapshot({ fresh = false } = {}): Promise<Snapshot> {
   return promise
 }
 
-// Excluded services never appear in a snapshot, so they can never be targeted.
+// A service ID from the browser only counts if the sandbox snapshot lists it.
 async function findInstance(serviceId: string, options?: { fresh?: boolean }) {
   const snapshot = await loadSnapshot(options)
   const instance = snapshot.instances.find((candidate) => candidate.id === serviceId)

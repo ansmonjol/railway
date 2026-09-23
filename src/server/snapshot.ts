@@ -70,16 +70,13 @@ export function statusOf(
 
 export function toSnapshot(
   environment: RailwayEnvironment,
-  options: { excludedServiceIds: string[]; destroyingServiceIds?: string[]; maxServices: number },
+  options: { destroyingServiceIds?: string[]; maxServices: number },
 ): Snapshot {
-  const excluded = new Set(options.excludedServiceIds)
   // Railway tears a service down in about ten seconds (domain, deployment, then the
   // service itself); meanwhile it would look stopped and offer Start.
   const destroying = new Set(options.destroyingServiceIds)
   const instances = environment.serviceInstances.edges
-    .map(({ node }) => node)
-    .filter((node) => !excluded.has(node.serviceId))
-    .map((node): Instance => {
+    .map(({ node }): Instance => {
       const status = destroying.has(node.serviceId)
         ? 'destroying'
         : statusOf(node.latestDeployment?.status, node.hasEverDeployed)

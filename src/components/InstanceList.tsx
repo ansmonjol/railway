@@ -23,7 +23,7 @@ export function InstanceList() {
         <div>
           <h1 className="text-lg font-semibold">Instances</h1>
           <p className="text-sm text-muted-foreground">
-            whoami containers in this Railway project, each with a public URL.
+            whoami containers in the sandbox, each with a public URL.
           </p>
         </div>
         <div className="flex items-center gap-4">
