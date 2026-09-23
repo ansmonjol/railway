@@ -180,12 +180,19 @@ export const getMetrics = createServerFn({ method: 'GET' })
   .handler(({ data }) =>
     authed(async () => {
       const instance = await findInstance(data.serviceId)
+      const to = Date.now()
+      const from = to - METRICS_WINDOW_MS
       const { metrics } = await railway(MetricsQuery, {
         environmentId: env().SANDBOX_ENVIRONMENT_ID,
         serviceId: instance.id,
-        startDate: new Date(Date.now() - METRICS_WINDOW_MS).toISOString(),
+        startDate: new Date(from).toISOString(),
       })
-      return metrics
+      // Railway sends epoch seconds and gigabytes; the chart wants milliseconds and MB.
+      const points = (measurement: string, scale: number) =>
+        (metrics.find((metric) => metric.measurement === measurement)?.values ?? []).map(
+          ({ ts, value }) => ({ ts: ts * 1000, value: value * scale }),
+        )
+      return { from, to, cpu: points('CPU_USAGE', 1), memoryMb: points('MEMORY_USAGE_GB', 1000) }
     }),
   )
 

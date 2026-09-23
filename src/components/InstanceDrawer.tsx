@@ -1,6 +1,7 @@
 import { useQuery } from '@tanstack/react-query'
 import { useNavigate } from '@tanstack/react-router'
-import type { ReactNode } from 'react'
+import { Suspense, lazy, type ReactNode } from 'react'
+import { ErrorNote } from '@/components/ErrorNote'
 import { StatusBadge } from '@/components/StatusBadge'
 import {
   Sheet,
@@ -12,9 +13,14 @@ import {
 import { Skeleton } from '@/components/ui/skeleton'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { deploymentsQuery, logsQuery, snapshotQuery } from '@/lib/queries'
-import { AppError } from '@/lib/result'
 import { cn, timeAgo } from '@/lib/utils'
 import type { Instance } from '@/server/snapshot'
+
+// Recharts is heavy: it loads when the Metrics tab is about to open, not with the page.
+const loadMetrics = () => import('@/components/InstanceMetrics')
+const InstanceMetrics = lazy(() =>
+  loadMetrics().then((module) => ({ default: module.InstanceMetrics })),
+)
 
 // Driven by ?instance=<id>, so a drawer can be linked to and survives a reload.
 export function InstanceDrawer({ instanceId }: { instanceId: string | undefined }) {
@@ -46,6 +52,13 @@ export function InstanceDrawer({ instanceId }: { instanceId: string | undefined 
               <TabsTrigger value="overview">Overview</TabsTrigger>
               <TabsTrigger value="logs">Logs</TabsTrigger>
               <TabsTrigger value="deployments">Deployments</TabsTrigger>
+              <TabsTrigger
+                value="metrics"
+                onPointerEnter={() => void loadMetrics()}
+                onFocus={() => void loadMetrics()}
+              >
+                Metrics
+              </TabsTrigger>
             </TabsList>
             <TabsContent value="overview" className="pt-2">
               <Overview instance={instance} />
@@ -55,6 +68,11 @@ export function InstanceDrawer({ instanceId }: { instanceId: string | undefined 
             </TabsContent>
             <TabsContent value="deployments" className="pt-2">
               <Deployments instance={instance} />
+            </TabsContent>
+            <TabsContent value="metrics" className="pt-2">
+              <Suspense fallback={<Skeleton className="h-72 w-full" />}>
+                <InstanceMetrics instance={instance} />
+              </Suspense>
             </TabsContent>
           </Tabs>
         ) : null}
@@ -163,16 +181,5 @@ function Deployments({ instance }: { instance: Instance }) {
         </li>
       ))}
     </ul>
-  )
-}
-
-function ErrorNote({ error }: { error: Error }) {
-  return (
-    <p role="alert" className="text-sm text-destructive">
-      {error.message}
-      {error instanceof AppError && error.traceId ? (
-        <span className="block text-muted-foreground">Railway trace ID: {error.traceId}</span>
-      ) : null}
-    </p>
   )
 }

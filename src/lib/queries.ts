@@ -1,5 +1,5 @@
 import { queryOptions } from '@tanstack/react-query'
-import { getDeployments, getLogs, getSession, getSnapshot } from '@/functions'
+import { getDeployments, getLogs, getMetrics, getSession, getSnapshot } from '@/functions'
 import { unwrap } from '@/lib/result'
 
 // How the UI reads from the server functions: query keys and polling live here.
@@ -44,4 +44,12 @@ export const deploymentsQuery = (serviceId: string) =>
   queryOptions({
     queryKey: ['deployments', serviceId],
     queryFn: () => getDeployments({ data: { serviceId } }).then(unwrap),
+  })
+
+// Railway samples once a minute, so polling faster would only repeat the same points.
+export const metricsQuery = (serviceId: string) =>
+  queryOptions({
+    queryKey: ['metrics', serviceId],
+    queryFn: () => getMetrics({ data: { serviceId } }).then(unwrap),
+    refetchInterval: 60_000,
   })
