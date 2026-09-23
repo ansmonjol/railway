@@ -25,7 +25,7 @@ railway run --service dashboard -- pnpm dev   # same, with the deployed service'
 
 Checks: `pnpm typecheck`, `pnpm lint`, `pnpm test`. [CI](.github/workflows/ci.yml) runs them on every pull request and push to `main`, along with `gql.tada check` and `pnpm format:check`. Production build: `pnpm build && pnpm start`.
 
-Deploying: the `dashboard` service is declared in `.railway/railway.ts` and builds from `main` on every merge. `railway config plan` / `railway config apply` change its settings; secrets are set once with `railway variable set --stdin`.
+Deploying: the `dashboard` service is declared in `.railway/railway.ts` and builds from `main` on every merge, once CI is green on that commit. `railway config plan` / `railway config apply` change its settings; secrets are set once with `railway variable set --stdin`.
 
 ## Architecture
 
