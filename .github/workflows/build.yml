@@ -1,4 +1,4 @@
-name: CI
+name: Build
 
 on:
   pull_request:
@@ -13,7 +13,7 @@ permissions:
   contents: read
 
 jobs:
-  checks:
+  build:
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
@@ -21,8 +21,6 @@ jobs:
         with:
           persist-credentials: false
 
-      # Node and pnpm come from mise.toml. The action trusts the checkout
-      # (MISE_TRUSTED_CONFIG_PATHS) and caches the tools it installs.
       - uses: jdx/mise-action@v4
 
       - name: Locate the pnpm store
@@ -38,8 +36,7 @@ jobs:
           restore-keys: pnpm-store-${{ runner.os }}-
 
       - run: pnpm install --frozen-lockfile
-      - run: pnpm typecheck
-      - run: pnpm lint
-      - run: pnpm test
-      - run: pnpm exec gql.tada check
-      - run: pnpm format:check
+
+      # The production build is the only check that enforces server-only imports:
+      # TanStack Start's import protection mocks a violation in dev and fails the build.
+      - run: pnpm build
