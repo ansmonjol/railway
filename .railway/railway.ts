@@ -8,7 +8,8 @@ export default defineRailway((ctx) => {
   if (!ctx.projectId || !ctx.environmentId) throw new Error('Link a project first: railway link')
 
   const dashboard = service('dashboard', {
-    source: github('ansmonjol/railway', { branch: 'main' }),
+    // Wait for CI: a deploy waits for its commit's GitHub Actions runs and is skipped if one fails.
+    source: github('ansmonjol/railway', { branch: 'main', checkSuites: true }),
     build: { builder: 'RAILPACK' },
     healthcheck: '/api/health',
     env: {

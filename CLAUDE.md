@@ -9,7 +9,7 @@ A dashboard that spins `traefik/whoami` containers up and down through Railway's
 - `pnpm build && pnpm start`: production build served by srvx, as on Railway
 - `railway config plan` / `railway config apply`: preview and apply `.railway/railway.ts`, the dashboard service's infrastructure (secrets stay `preserve()`, set with `railway variable set --stdin`)
 
-Done means typecheck, lint and tests are green, shown with their output.
+Done means what CI runs is green locally, shown with its output: `pnpm typecheck`, `pnpm lint`, `pnpm test`, `pnpm exec gql.tada check`, `pnpm format:check` (`ci.yml`) and `pnpm build` (`build.yml`).
 
 ## Rules
 
