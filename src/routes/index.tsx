@@ -23,6 +23,7 @@ function LoginPage() {
   const [code, setCode] = useState('')
   const signIn = useMutation({
     mutationFn: (code: string) => login({ data: { code } }).then(unwrap),
+    meta: { silent: true }, // shown inline under the field instead of as a toast
     onSuccess: async (session) => {
       queryClient.setQueryData(sessionQuery.queryKey, session)
       await navigate({ to: '/instances' })
