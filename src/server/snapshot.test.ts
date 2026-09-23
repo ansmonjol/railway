@@ -67,7 +67,11 @@ describe('toSnapshot', () => {
     const snapshot = toSnapshot(
       environment([
         node({ serviceId: 'svc-a', serviceName: 'whoami-calm-otter' }),
-        node({ serviceId: 'svc-b', serviceName: 'created-by-hand' }),
+        node({
+          serviceId: 'svc-b',
+          serviceName: 'created-by-hand',
+          source: { image: 'postgres:18' },
+        }),
       ]),
       options,
     )

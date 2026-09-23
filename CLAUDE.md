@@ -4,7 +4,7 @@ A dashboard that spins `traefik/whoami` containers up and down through Railway's
 
 ## Commands
 
-- `pnpm dev`: dev server on http://localhost:3000 (`railway run pnpm dev` injects the deployed service's variables)
+- `pnpm dev`: dev server on http://localhost:3000 (`railway run pnpm dev` injects the deployed service's variables once the checkout is linked with `railway link --project Dashboard --environment production`)
 - `pnpm typecheck`, `pnpm lint`, `pnpm test`, `pnpm format`
 - `pnpm build && pnpm start`: production build served by srvx, as on Railway
 - `railway config plan` / `railway config apply`: preview and apply `.railway/railway.ts`, which describes the whole `Dashboard` project (secrets stay `preserve()`, set with `railway variable set --stdin`)

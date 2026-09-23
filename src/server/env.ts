@@ -13,14 +13,14 @@ const schema = z.object({
 
 export type Env = z.infer<typeof schema>
 
-export function env(): Env {
-  const parsed = schema.safeParse(process.env)
-  if (!parsed.success) throw new AppError(`Server misconfigured: ${envProblems().join(', ')}`)
+export function env(source = process.env): Env {
+  const parsed = schema.safeParse(source)
+  if (!parsed.success) throw new AppError(`Server misconfigured: ${envProblems(source).join(', ')}`)
   return parsed.data
 }
 
 // Names (never values) of the variables that are missing or invalid.
-export function envProblems(): string[] {
-  const parsed = schema.safeParse(process.env)
+export function envProblems(source = process.env): string[] {
+  const parsed = schema.safeParse(source)
   return parsed.success ? [] : parsed.error.issues.map((issue) => issue.path.join('.'))
 }

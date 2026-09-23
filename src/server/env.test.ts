@@ -1,4 +1,4 @@
-import { afterEach, describe, expect, it, vi } from 'vitest'
+import { describe, expect, it } from 'vitest'
 import { env } from './env'
 
 // Every variable env() requires, with placeholder values.
@@ -10,14 +10,8 @@ const REQUIRED = {
   SANDBOX_ENVIRONMENT_ID: 'environment',
 }
 
-afterEach(() => {
-  vi.unstubAllEnvs()
-})
-
 describe('env', () => {
   it('gives the sandbox 4 instance slots when SANDBOX_MAX_SERVICES is unset', () => {
-    for (const [name, value] of Object.entries(REQUIRED)) vi.stubEnv(name, value)
-    vi.stubEnv('SANDBOX_MAX_SERVICES', undefined)
-    expect(env().SANDBOX_MAX_SERVICES).toBe(4)
+    expect(env(REQUIRED).SANDBOX_MAX_SERVICES).toBe(4)
   })
 })

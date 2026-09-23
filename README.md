@@ -20,6 +20,7 @@ Requirements: [mise](https://mise.jdx.dev) (pins Node and pnpm) and, for real da
 mise install && pnpm install
 cp .env.example .env    # fill it in, or skip it and use the Railway CLI below
 pnpm dev                # http://localhost:3000
+railway link --project Dashboard --environment production   # once, for the railway commands
 railway run --service dashboard -- pnpm dev   # same, with the deployed service's variables
 ```
 
@@ -46,7 +47,7 @@ TanStack Query polls  ---- RPC --> auth, validation, rules, 2 s cache  -----> /g
 
 - **One boundary.** The browser never talks to Railway: every call goes through a TanStack Start server function holding the token. No GraphQL proxy, no token in the client. Server functions only answer same-origin requests (TanStack's CSRF middleware, on top of a `SameSite=Lax` cookie).
 - **Results, not exceptions.** Server functions return `{ ok: true, data } | { ok: false, message, traceId? }`. The client unwraps them into TanStack Query errors, and one place (`router.tsx`) turns failures into toasts or, for an expired session, a trip back to the login screen.
-- **Rules live on the server.** The slot cap (`SANDBOX_MAX_SERVICES` minus current rows), `SPINNED_BY` / `SPINNED_AT` taken from the session cookie rather than the request, the actions allowed per status, and the targets: a service ID from the browser only counts if a fresh snapshot of the sandbox lists it.
+- **Rules live on the server.** The slot cap (`SANDBOX_MAX_SERVICES` minus current rows), `SPINNED_BY` / `SPINNED_AT` taken from the session cookie rather than the request, the actions allowed per status, and the targets: a service ID from the browser only counts if a snapshot of the sandbox lists it, a fresh one for writes.
 - **Status mapping.** Queued, initializing, building, deploying, waiting and needs approval are _starting_; success is _running_; sleeping is _sleeping_; removing is _stopping_; removed, or no deployment on a service that has deployed before, is _stopped_; failed and crashed are _failed_; anything else is _unknown_. The map is typed against the schema's enum, so a new Railway status fails the build after a schema refresh.
 - **Stop removes the deployment.** `deploymentStop` leaves the status at SUCCESS, and `serviceInstanceRedeploy` does nothing once no deployment exists, hence `deploymentRemove` to stop and `serviceInstanceDeployV2` to start.
 - **Destroy is scoped to the environment.** A project token gets "Not Authorized" on a project-wide `serviceDelete`, so the call passes `environmentId`; Railway then removes the service once no environment holds it.
