@@ -62,6 +62,7 @@ TanStack Query polls  ---- RPC --> auth, validation, rules, 2 s cache  -----> /g
 
 What I would do next, roughly in order:
 
+- **Two projects**: the dashboard in its own project and the instances in a sandbox project. The sandbox token would then never decrypt the dashboard's secrets, and the dashboard would not need to hide itself. The code already reads the sandbox from `SANDBOX_*`; the move is a second project token and the trial's second project slot.
 - **Push instead of poll**: Railway's GraphQL subscriptions for deployment status and logs, relayed over SSE.
 - **Slot reservation**: two simultaneous spin-ups can both pass the cap check (Railway's own per-project limit still holds). A lock or a reservation row would close it.
 - **Clean up half-created instances** when the domain or the deploy fails after `serviceCreate`. Today they show up as _unknown_ with Start and Destroy.
