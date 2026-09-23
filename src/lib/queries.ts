@@ -1,5 +1,5 @@
 import { queryOptions } from '@tanstack/react-query'
-import { getSession, getSnapshot } from '@/functions'
+import { getDeployments, getLogs, getSession, getSnapshot } from '@/functions'
 import { unwrap } from '@/lib/result'
 
 // How the UI reads from the server functions: query keys and polling live here.
@@ -31,3 +31,17 @@ export const snapshotQuery = queryOptions({
     return changing || Date.now() - lastWriteAt < 20_000 ? 3_000 : 15_000
   },
 })
+
+// Mounted only while the Logs tab is open, and paused while the browser tab is hidden.
+export const logsQuery = (serviceId: string) =>
+  queryOptions({
+    queryKey: ['logs', serviceId],
+    queryFn: () => getLogs({ data: { serviceId } }).then(unwrap),
+    refetchInterval: 5_000,
+  })
+
+export const deploymentsQuery = (serviceId: string) =>
+  queryOptions({
+    queryKey: ['deployments', serviceId],
+    queryFn: () => getDeployments({ data: { serviceId } }).then(unwrap),
+  })
