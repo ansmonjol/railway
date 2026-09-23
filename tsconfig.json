@@ -15,6 +15,14 @@
     "noUncheckedIndexedAccess": true,
     "noUnusedLocals": true,
     "noUnusedParameters": true,
-    "noFallthroughCasesInSwitch": true
+    "noFallthroughCasesInSwitch": true,
+
+    "plugins": [
+      {
+        "name": "gql.tada/ts-plugin",
+        "schema": "./src/server/schema.graphql",
+        "tadaOutputLocation": "./src/server/graphql-env.d.ts"
+      }
+    ]
   }
 }
