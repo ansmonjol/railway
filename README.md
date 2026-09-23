@@ -23,7 +23,7 @@ pnpm dev                # http://localhost:3000
 railway run --service dashboard -- pnpm dev   # same, with the deployed service's variables
 ```
 
-Checks: `pnpm typecheck`, `pnpm lint`, `pnpm test`. Production build: `pnpm build && pnpm start`.
+Checks: `pnpm typecheck`, `pnpm lint`, `pnpm test`. [CI](.github/workflows/ci.yml) runs them on every pull request and push to `main`, along with `gql.tada check` and `pnpm format:check`. Production build: `pnpm build && pnpm start`.
 
 Deploying: the `dashboard` service is declared in `.railway/railway.ts` and builds from `main` on every merge. `railway config plan` / `railway config apply` change its settings; secrets are set once with `railway variable set --stdin`.
 
@@ -70,4 +70,4 @@ What I would do next, roughly in order:
 - **Rename**: needs an account token, since a project token gets "Not Authorized" on `serviceUpdate`.
 - **More sources**: any image or repository, per-instance variables and ports.
 - **Sandbox-wide pages**: usage and cost across instances, a command palette.
-- **CI**: typecheck, lint, tests, `gql.tada check` and `railway config plan` on every pull request; end-to-end tests against a disposable Railway environment.
+- **More CI**: `railway config plan` on every pull request, which needs a Railway token as a repository secret; end-to-end tests against a disposable Railway environment.
